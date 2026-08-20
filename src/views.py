@@ -1,15 +1,30 @@
-#%%
 import duckdb
+import os
+import sys
 
-db_path = "data/transactions.sqlite"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "data", "transactions.sqlite")
+
+# Garante que o banco de dados e a tabela transactions existam antes de criar as VIEWs
+try:
+    from . import ingest_data
+except ImportError:
+    import ingest_data
+
+ingest_data.run_ingestion(db_path=DB_PATH, verbose=False)
 
 # Initiate connection with DuckDB
 con = duckdb.connect()
 
 # Install and load SQLite extension
 con.execute("INSTALL sqlite; LOAD sqlite")
-# Attach the SQLite database file
-con.execute(f"ATTACH '{db_path}' AS sqlite_db (TYPE SQLITE)")
+
+norm_db_path = DB_PATH.replace("\\", "/")
+con.execute(f"ATTACH '{norm_db_path}' AS sqlite_db (TYPE SQLITE)")
+
+def init_views(con_target=con):
+    """Garante a criação de todas as VIEWs no DuckDB."""
+    pass
 
 #%%
 con.execute("""
@@ -265,3 +280,215 @@ con.execute("""
     GROUP BY tx_hour, time_period
     ORDER BY tx_hour;
 """)
+
+# %%
+# Heurística 1: Desvio de Valor vs Média Histórica do Próprio Usuário
+con.execute("""
+    CREATE OR REPLACE VIEW vw_user_amount_deviation AS
+    WITH user_history AS (
+        SELECT 
+            transaction_id,
+            user_id,
+            transaction_amount,
+            has_cbk,
+            CAST(transaction_date AS TIMESTAMP) AS tx_dt,
+            AVG(transaction_amount) OVER(
+                PARTITION BY user_id 
+                ORDER BY CAST(transaction_date AS TIMESTAMP) 
+                ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+            ) AS hist_avg_amount
+        FROM sqlite_db.transactions
+    )
+    SELECT 
+        CASE 
+            WHEN hist_avg_amount IS NULL THEN '1. Primeira Compra (Sem Histórico)'
+            WHEN transaction_amount > (hist_avg_amount * 2.5) THEN '2. Desvio Extremo (> 250% da Média)'
+            WHEN transaction_amount > (hist_avg_amount * 1.5) THEN '3. Desvio Moderado (150% a 250%)'
+            ELSE '4. Dentro do Padrão (<= 150%)'
+        END AS user_amount_anomaly_group,
+        COUNT(*) AS total_txs,
+        SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) AS total_cbks,
+        ROUND(SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS pct_cbk,
+        ROUND(SUM(transaction_amount), 2) AS total_vol,
+        ROUND(SUM(CASE WHEN has_cbk THEN transaction_amount ELSE 0 END), 2) AS cbk_vol,
+        ROUND(SUM(CASE WHEN has_cbk THEN transaction_amount ELSE 0 END) * 100.0 / SUM(transaction_amount), 2) AS pct_cbk_vol,
+        ROUND(AVG(transaction_amount), 2) AS avg_ticket
+    FROM user_history
+    GROUP BY user_amount_anomaly_group
+    ORDER BY user_amount_anomaly_group;
+""")
+
+# %%
+# Heurística 2: Constância de Dispositivos por Usuário (1, 2 vs 3+ Aparelhos)
+con.execute("""
+    CREATE OR REPLACE VIEW vw_user_device_expansion AS
+    WITH user_devices AS (
+        SELECT 
+            user_id,
+            COUNT(DISTINCT device_id) AS qtt_devices,
+            COUNT(*) AS total_txs,
+            SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) AS total_cbks,
+            ROUND(SUM(transaction_amount), 2) AS total_vol,
+            ROUND(SUM(CASE WHEN has_cbk THEN transaction_amount ELSE 0 END), 2) AS cbk_vol
+        FROM sqlite_db.transactions
+        GROUP BY user_id
+    )
+    SELECT 
+        CASE 
+            WHEN qtt_devices = 1 THEN '1 Dispositivo Único'
+            WHEN qtt_devices = 2 THEN '2 Dispositivos (Monitoramento)'
+            WHEN qtt_devices >= 3 THEN '3+ Dispositivos (Alto Risco)'
+            ELSE 'Sem Dispositivo Registrado'
+        END AS user_devices_group,
+        COUNT(user_id) AS qtt_users,
+        SUM(total_txs) AS total_txs,
+        SUM(total_cbks) AS total_cbks,
+        ROUND(SUM(total_cbks) * 100.0 / SUM(total_txs), 2) AS pct_cbk,
+        ROUND(SUM(cbk_vol) * 100.0 / SUM(total_vol), 2) AS pct_cbk_vol,
+        ROUND(SUM(total_vol) / SUM(total_txs), 2) AS avg_ticket
+    FROM user_devices
+    GROUP BY user_devices_group
+    ORDER BY pct_cbk_vol DESC;
+""")
+
+# %%
+# Heurística 3: Migração de Cartões entre Múltiplos Usuários (Card Hopping)
+con.execute("""
+    CREATE OR REPLACE VIEW vw_card_hopping_analysis AS
+    WITH card_users AS (
+        SELECT 
+            card_number,
+            COUNT(DISTINCT user_id) AS qtt_users_on_card,
+            COUNT(DISTINCT device_id) AS qtt_devices_on_card,
+            COUNT(*) AS total_txs,
+            SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) AS total_cbks,
+            ROUND(SUM(transaction_amount), 2) AS total_vol,
+            ROUND(SUM(CASE WHEN has_cbk THEN transaction_amount ELSE 0 END), 2) AS cbk_vol
+        FROM sqlite_db.transactions
+        GROUP BY card_number
+    )
+    SELECT 
+        CASE 
+            WHEN qtt_users_on_card = 1 AND qtt_devices_on_card = 1 THEN '1 Usuário & 1 Dispositivo'
+            WHEN qtt_users_on_card = 1 AND qtt_devices_on_card > 1 THEN '1 Usuário em Múltiplos Dispositivos'
+            WHEN qtt_users_on_card = 2 THEN '2 Usuários no Mesmo Cartão (Card Hopping)'
+            ELSE '3+ Usuários no Mesmo Cartão'
+        END AS card_sharing_pattern,
+        COUNT(card_number) AS qtt_cards,
+        SUM(total_txs) AS total_txs,
+        SUM(total_cbks) AS total_cbks,
+        ROUND(SUM(total_cbks) * 100.0 / SUM(total_txs), 2) AS pct_cbk,
+        ROUND(SUM(cbk_vol) * 100.0 / SUM(total_vol), 2) AS pct_cbk_vol,
+        ROUND(SUM(total_vol) / SUM(total_txs), 2) AS avg_ticket
+    FROM card_users
+    GROUP BY card_sharing_pattern
+    ORDER BY pct_cbk_vol DESC;
+""")
+
+# %%
+# Heurística 4: Janelas Temporais de Velocidade (Burst Windows)
+con.execute("""
+    CREATE OR REPLACE VIEW vw_velocity_window_risk AS
+    WITH tx_interval AS (
+        SELECT 
+            transaction_id,
+            user_id,
+            card_number,
+            has_cbk,
+            transaction_amount,
+            date_diff('second', 
+                LAG(CAST(transaction_date AS TIMESTAMP)) OVER (
+                    PARTITION BY user_id ORDER BY CAST(transaction_date AS TIMESTAMP)
+                ), 
+                CAST(transaction_date AS TIMESTAMP)
+            ) AS seconds_since_last_tx
+        FROM sqlite_db.transactions
+    )
+    SELECT 
+        CASE 
+            WHEN seconds_since_last_tx IS NULL THEN '0. Primeira Transação do Usuário'
+            WHEN seconds_since_last_tx <= 60 THEN '1. Super Rajada (<= 1 min)'
+            WHEN seconds_since_last_tx <= 300 THEN '2. Rajada Rápida (1 a 5 min)'
+            WHEN seconds_since_last_tx <= 1800 THEN '3. Janela Curta (5 a 30 min)'
+            WHEN seconds_since_last_tx <= 86400 THEN '4. Janela Média (30 min a 24h)'
+            ELSE '5. Mais de 24h / Espaçado'
+        END AS velocity_window,
+        COUNT(*) AS total_txs,
+        SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) AS total_cbks,
+        ROUND(SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS pct_cbk,
+        ROUND(SUM(CASE WHEN has_cbk THEN transaction_amount ELSE 0 END) * 100.0 / SUM(transaction_amount), 2) AS pct_cbk_vol,
+        ROUND(AVG(transaction_amount), 2) AS avg_ticket
+    FROM tx_interval
+    GROUP BY velocity_window
+""")
+
+# %%
+# Heurística 5: Merchant Hopping (Dispersão entre Múltiplos Lojistas pelo mesmo Usuário)
+con.execute("""
+    CREATE OR REPLACE VIEW vw_merchant_hopping_analysis AS
+
+    WITH user_merchants AS (
+        SELECT 
+            user_id,
+            COUNT(DISTINCT merchant_id) AS qtt_merchants,
+            COUNT(*) AS total_txs,
+            SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) AS total_cbks,
+            ROUND(SUM(transaction_amount), 2) AS total_vol,
+            ROUND(SUM(CASE WHEN has_cbk THEN transaction_amount ELSE 0 END), 2) AS cbk_vol
+        FROM sqlite_db.transactions
+        GROUP BY user_id
+    )
+    SELECT 
+        CASE 
+            WHEN qtt_merchants = 1 THEN '1. Um Único Lojista'
+            WHEN qtt_merchants = 2 THEN '2. Dois Lojistas Distintos'
+            ELSE '3. Três ou Mais Lojistas (Merchant Hopping)'
+        END AS merchant_diversity_group,
+        COUNT(user_id) AS qtt_users,
+        SUM(total_txs) AS total_txs,
+        SUM(total_cbks) AS total_cbks,
+        ROUND(SUM(total_cbks) * 100.0 / SUM(total_txs), 2) AS pct_cbk,
+        ROUND(SUM(cbk_vol) * 100.0 / SUM(total_vol), 2) AS pct_cbk_vol,
+        ROUND(SUM(total_vol) / SUM(total_txs), 2) AS avg_ticket
+    FROM user_merchants
+    GROUP BY merchant_diversity_group
+    ORDER BY merchant_diversity_group;
+""")
+
+# %%
+# Heurística 6: Probe & Scale (Escalação Abrupta de Valor pós-Aprovação)
+con.execute("""
+    CREATE OR REPLACE VIEW vw_probe_and_scale_analysis AS
+    WITH user_growth AS (
+        SELECT 
+            transaction_id,
+            user_id,
+            transaction_amount,
+            has_cbk,
+            LAG(transaction_amount) OVER(
+                PARTITION BY user_id 
+                ORDER BY CAST(transaction_date AS TIMESTAMP)
+            ) AS prev_amount
+        FROM sqlite_db.transactions
+    )
+    SELECT 
+        CASE 
+            WHEN prev_amount IS NULL THEN '1. Primeira Transação (Sem Anterior)'
+            WHEN transaction_amount > prev_amount * 2 THEN '2. Escalação Abrupta (> 2x da anterior)'
+            WHEN transaction_amount > prev_amount THEN '3. Aumento Moderado (1x a 2x)'
+            WHEN transaction_amount = prev_amount THEN '4. Mesmo Valor Repetido'
+            ELSE '5. Valor Menor que a Anterior'
+        END AS amount_progression_group,
+        COUNT(*) AS total_txs,
+        SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) AS total_cbks,
+        ROUND(SUM(CASE WHEN has_cbk THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) AS pct_cbk,
+        ROUND(SUM(transaction_amount), 2) AS total_vol,
+        ROUND(SUM(CASE WHEN has_cbk THEN transaction_amount ELSE 0 END), 2) AS cbk_vol,
+        ROUND(SUM(CASE WHEN has_cbk THEN transaction_amount ELSE 0 END) * 100.0 / SUM(transaction_amount), 2) AS pct_cbk_vol,
+        ROUND(AVG(transaction_amount), 2) AS avg_ticket
+    FROM user_growth
+    GROUP BY amount_progression_group
+    ORDER BY amount_progression_group;
+""")
+
+
