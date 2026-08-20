@@ -117,47 +117,44 @@ The exploratory data analysis was conducted on **3,199 mobile transactional reco
 
 ---
 
-## ⚖️ 4-Tier Anti-Fraud Decision Strategy
+## ⚖️ 3-Path Anti-Fraud Decision Strategy
 
-To **maximize fraud prevention while protecting legitimate merchant revenue and customer conversion**, decisions are routed across 4 operational tiers:
+To **maximize fraud prevention while protecting legitimate merchant revenue and customer conversion**, decisions are routed across a 3-tier operational matrix:
 
-| Risk Tier | Fraud Probability | Engine Action | Customer & Merchant Impact |
-| :--- | :---: | :---: | :--- |
-| 🟢 **Green Path** | 0% – 15% | **Frictionless Approval** | Instant sub-second approval; zero customer friction. |
-| 🟡 **Watchlist** | 15% – 40% | **Silent Monitoring** | Approved; flagged for background velocity observation. |
-| 🟠 **Step-Up Challenge** | 40% – 75% | **Enhanced Authentication** | 3DS 2.0 / Facial Biometrics / Mobile Push Challenge. Eliminates false positives. |
-| 🔴 **Hard Decline** | > 75% | **Immediate Block** | Direct rejection; card & device temporarily blacklisted. |
+| Decision Path | Risk & Trigger Criteria | Engine Action | Customer & Merchant Impact |
+| :--- | :--- | :---: | :--- |
+| 🟢 **Green Path** | Ticket $\le \$ 500$, habitual user pattern ($\le 150\%$ avg), 1st or 2nd linked device, clean merchant history. | **Frictionless Approval** | Instant sub-second approval; zero customer friction for $> 85\%$ of legitimate volume. |
+| 🟡 **Yellow Path** | Amount spike ($> 250\%$ avg), 3rd device on account, card hopping, 3+ merchants, probe & scale ($> 2\text{x}$ prior attempt), ticket $> \$ 3,500$ daytime. | **Enhanced Authentication (Step-Up)** | 3D-Secure 2.0 / Facial Biometrics in App. If authenticated, **approves with Liability Shift**. |
+| 🔴 **Red Path** | Prior confirmed chargeback, device with $> 4$ cards (Device Farming), velocity burst with $\ge 5$ consecutive retries, $24\text{h}$ volume $> \$ 5,000$, ticket $> \$ 3,500$ at Midnight (00h-06h) without history. | **Hard Decline (Immediate Block)** | Direct rejection; audit reason logged for security and compliance. |
 
 ---
 
 ## 📊 Interactive Dashboard Modules
 
-The executive dashboard features **native Dark Mode**, custom CSS cards, and **instant bilingual support (PT-BR / EN)** via the sidebar:
+The executive dashboard (*Anti-Fraud Hub*) features **native Dark Mode**, custom CSS cards, and **instant bilingual support (PT-BR / EN)** via the sidebar:
 
 ```
 [🌐 Language Switcher: 🇧🇷 Português | 🇺🇸 English]
-├── 1. 📊 Executive Overview & Portfolio KPIs
-│   ├── Macro KPIs (Volume, Count, Average Ticket, Loss Rates)
+├── 📊 1. Dataset Overview
+│   ├── Macro KPIs (Transactions, Volume, Average Ticket, Chargeback Rates)
 │   ├── Daily & cumulative chargeback progression curves
 │   └── Ticket distribution comparative histograms (Legitimate vs Fraud)
-├── 2. 🔍 Multidimensional Risk Analysis
-│   ├── Device Farming matrix (Cards per Device)
-│   ├── Velocity burst and temporal gap distribution
-│   └── Amount range sensitivity analysis
-├── 3. 🛡️ Heuristics Engine & Financial ROI
-│   ├── 6 Statistical rules with Precision, Recall, and F1-Scores
-│   ├── Confusion matrices and fraud prevention metrics
-│   └── Net Financial ROI (Fraud Losses Prevented vs False Positive Cost)
-├── 4. 🎛️ Interactive Rule Simulator
-│   ├── Real-time threshold adjustment (Amount Spikes, Time Windows, Card Limits)
-│   └── Dynamic recalculation of protected revenue and false positive rates
-├── 5. 🔬 Transaction Forensics & User Drill-Down
-│   ├── Deep-dive by Transaction ID, User ID, Card, and Device ID
-│   └── Chronological risk audit timeline for fraud analysts
-└── 6. 📚 Technical Answers & Payments Industry Ecosystem
-    ├── Question 1: Authorization Flow, Clearing & Settlement, MDR Breakdown
-    ├── Question 2: Acquirer vs Sub-acquirer (PayFac) vs Payment Gateway
-    └── Question 3: Chargeback vs Cancellation & Regulatory Acquirer Risk
+├── 🔍 2. Fraud Patterns & Analysis
+│   ├── Amount Range Risk (Fraud sensitivity by transaction value brackets)
+│   ├── Temporal Vulnerability (Day period risk & 24h hourly curve)
+│   ├── Device Farming & Multi-Card Concentration (Loss % vs cards per device)
+│   └── Velocity Bursts (Fraud probability by user attempt sequence order)
+├── 🚨 3. Critical Entities
+│   ├── 🏪 High-Risk Merchants (Categorization & Top 15 highest loss merchants)
+│   ├── 📱 Suspicious Devices (Device farming & multi-account hardware)
+│   ├── 👤 Critical Users (Users with prior chargebacks & multi-card patterns)
+│   └── 💳 Shared Cards (Card hopping & distributed attack vectors)
+└── 🎯 4. Insights & Policy Proposal
+    ├── KPI Summary (Fraud Prevention >85%, Good Approval >90%, Target Fraud Rate <2.5%, Latency <10ms)
+    ├── 💡 Tab 1: Analytical Heuristics & Evidence (6 proven statistical rules with real data charts)
+    ├── 🛡️ Tab 2: 3-Path Policy Matrix (Green / Yellow / Red path interactive cards)
+    ├── ⚙️ Tab 3: Real-Time Engine Architecture (Layered REST API check in <10ms)
+    └── 🌐 Tab 4: Next-Gen Data Enrichment (Device fingerprinting, Geo-IP, MCC, 3DS telemetry)
 ```
 
 ---
@@ -328,47 +325,44 @@ A análise exploratória foi conduzida sobre a base transacional de **3.199 oper
 
 ---
 
-## ⚖️ Estratégia de Decisão Antifraude em 4 Camadas (4-Tier Strategy)
+## ⚖️ Estratégia de Decisão Antifraude em 3 Vias (3-Path Strategy)
 
-Para **maximizar a prevenção de fraudes enquanto protege a receita legítima dos lojistas e a conversão dos clientes**, as decisões são roteadas através de 4 níveis operacionais:
+Para **maximizar a prevenção de fraudes enquanto protege a receita legítima dos lojistas e a conversão dos clientes**, as decisões são roteadas através de uma matriz operacional em 3 vias:
 
-| Nível de Risco | Probabilidade de Fraude | Ação do Motor | Impacto no Cliente & Lojista |
-| :--- | :---: | :---: | :--- |
-| 🟢 **Green Path** | 0% a 15% | **Aprovação Fluida** | Aprovação instantânea em sub-segundos; zero atrito comercial. |
-| 🟡 **Watchlist** | 15% a 40% | **Monitoramento Silencioso** | Aprovada; marcada para observação de velocidade em background. |
-| 🟠 **Step-Up Challenge** | 40% a 75% | **Autenticação Reforçada** | Desafio 3DS 2.0 / Biometria Facial / Push no App. Elimina falsos positivos. |
-| 🔴 **Hard Decline** | > 75% | **Bloqueio Imediato** | Rejeição direta; cartão e dispositivo bloqueados preventivamente. |
+| Via de Decisão | Critérios de Risco & Gatilhos | Ação do Motor | Impacto no Cliente & Lojista |
+| :--- | :--- | :---: | :--- |
+| 🟢 **Green Path** | Ticket $\le \$ 500$, padrão habitual ($\le 150\%$ da média), 1º ou 2º aparelho cadastrado, lojista sem histórico negativo. | **Aprovação Fluida** | Aprovação instantânea em sub-segundos; zero atrito comercial para $> 85\%$ do volume genuíno. |
+| 🟡 **Yellow Path** | Desvio de valor ($> 250\%$ da média), 3º aparelho no cadastro, card hopping, 3+ lojistas, probe & scale ($> 2\text{x}$ da anterior), ticket $> \$ 3.500$ em horário comercial. | **Autenticação Reforçada (Step-Up)** | Desafio 3D-Secure 2.0 / Biometria Facial no App. Se autenticado, **aprova com Liability Shift**. |
+| 🔴 **Red Path** | Chargeback prévio confirmado, aparelho com $> 4$ cartões (Device Farming), rajada com $\ge 5$ tentativas consecutivas, volume em $24\text{h} > \$ 5.000$, compra $> \$ 3.500$ na Madrugada (00h-06h) sem histórico. | **Hard Decline (Bloqueio Imediato)** | Rejeição direta e sumária; motivo de auditoria registrado para conformidade e segurança. |
 
 ---
 
 ## 📊 Módulos do Dashboard Interativo (Interactive Dashboard Modules)
 
-O dashboard executivo possui **Dark Mode nativo**, cartões customizados em CSS e **suporte bilíngue instantâneo (PT-BR / EN)** via barra lateral:
+O dashboard executivo (*Antifraude Hub*) possui **Dark Mode nativo**, cartões customizados em CSS e **suporte bilíngue instantâneo (PT-BR / EN)** via barra lateral:
 
 ```
 [🌐 Seletor de Idioma: 🇧🇷 Português | 🇺🇸 English]
-├── 1. 📊 Overview Executivo & KPIs do Portfólio
-│   ├── KPIs Macro (Volume, Quantidade, Ticket Médio, Taxas de Perda)
+├── 📊 1. Apresentação da Base (Dataset Overview)
+│   ├── KPIs Macro (Transações, Volume, Ticket Médio, Taxas de Chargeback em Qtd e Valor)
 │   ├── Curvas diárias e acumuladas de progressão de chargebacks
 │   └── Histogramas comparativos de distribuição de tickets (Legítimo vs Fraude)
-├── 2. 🔍 Análise Multidimensional de Riscos
-│   ├── Matriz de Device Farming (Cartões por Aparelho)
-│   ├── Distribuição de Velocity Bursts e intervalos temporais
-│   └── Análise de sensibilidade por faixas de valor
-├── 3. 🛡️ Motor de Heurísticas & ROI Financeiro
-│   ├── 6 Regras estatísticas com métricas de Precisão, Recall e F1-Score
-│   ├── Matrizes de confusão e métricas de prevenção de fraudes
-│   └── ROI Financeiro Líquido (Perdas Prevenidas vs Custo de Falso Positivo)
-├── 4. 🎛️ Simulador Interativo de Regras
-│   ├── Ajuste em tempo real de limiares (Picos de Valor, Janelas de Tempo, Limites de Cartões)
-│   └── Recálculo dinâmico da receita protegida e taxas de falsos positivos
-├── 5. 🔬 Investigação Forense de Transações & Drill-Down
-│   ├── Análise aprofundada por ID de Transação, ID de Usuário, Cartão e ID de Dispositivo
-│   └── Linha do tempo cronológica de auditoria de risco para analistas de fraude
-└── 6. 📚 Respostas Técnicas & Ecossistema da Indústria de Pagamentos
-    ├── Pergunta 1: Fluxo de Autorização, Liquidação (Clearing & Settlement), Composição do MDR
-    ├── Pergunta 2: Adquirente vs Subadquirente (PayFac) vs Gateway de Pagamentos
-    └── Pergunta 3: Chargeback vs Cancelamento & Risco Adquirente Regulatório
+├── 🔍 2. Padrões & Diagnóstico (Fraud Patterns & Analysis)
+│   ├── Sensibilidade por Faixa de Valor (Risco e mitigação por faixas de preço)
+│   ├── Vulnerabilidade Temporal (Risco por turnos do dia e curva horária 00h-23h)
+│   ├── Device Farming & Concentração de Cartões (Perda % vs cartões por aparelho)
+│   └── Velocity Bursts (Probabilidade de fraude pela ordem da tentativa do usuário)
+├── 🚨 3. Entidades Críticas (Critical Entities)
+│   ├── 🏪 Lojistas de Alto Risco (Categorização e Top 15 lojistas com maior prejuízo)
+│   ├── 📱 Dispositivos Suspeitos (Aparelhos de emulação e multi-contas)
+│   ├── 👤 Usuários Críticos (Cadastros com histórico de chargeback e multi-cartão)
+│   └── 💳 Cartões Compartilhados (Card hopping e ataques distribuídos)
+└── 🎯 4. Insights & Proposta (Insights & Policy Proposal)
+    ├── Resumo de KPIs (Prevenção >85%, Aprovação Legítima >90%, Fraude Alvo <2,5%, Latência <10ms)
+    ├── 💡 Aba 1: Heurísticas & Diagnóstico Analítico (6 regras estatísticas comprovadas com dados reais)
+    ├── 🛡️ Aba 2: Matriz de Políticas em 3 Vias (Cartões interativos Green / Yellow / Red Path)
+    ├── ⚙️ Aba 3: Arquitetura do Motor em Tempo Real (Validação em camadas REST API <10ms)
+    └── 🌐 Aba 4: Dados para Próxima Geração (Device fingerprinting, Geo-IP, MCC, telemetria 3DS)
 ```
 
 ---
@@ -446,5 +440,6 @@ As análises técnicas completas e relatórios executivos estão documentados em
 
 <div align="center">
 Desenvolvido para o <b>Processo Seletivo CloudWalk — Data Analyst I</b>.
+Documentação desenvolvida com auxílio de Inteligência Artificial.
 </div>
 

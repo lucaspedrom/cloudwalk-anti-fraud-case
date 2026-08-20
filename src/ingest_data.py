@@ -10,13 +10,13 @@ DB_PATH = os.path.join(DB_DIR, "transactions.sqlite")
 
 def run_ingestion(csv_path=CSV_PATH, db_path=DB_PATH, verbose=True):
     """
-    Ingere os dados do CSV transacional no SQLite e cria os índices de performance.
-    Garante idempotência (criação ou atualização de novos registros).
+    Ingests transactional CSV data into SQLite and creates performance indexes.
+    Ensures idempotency (creates or updates records).
     """
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     
     if not os.path.exists(csv_path):
-        raise FileNotFoundError(f"Arquivo CSV fonte não encontrado em: {csv_path}")
+        raise FileNotFoundError(f"Source CSV file not found at: {csv_path}")
 
     con = duckdb.connect()
     con.execute("INSTALL sqlite; LOAD sqlite")
@@ -60,7 +60,7 @@ def run_ingestion(csv_path=CSV_PATH, db_path=DB_PATH, verbose=True):
             FROM read_csv_auto('{norm_csv_path}');
         """)
         if verbose:
-            print("✅ Tabela `transactions` criada e populada com sucesso no SQLite.")
+            print("✅ Table `transactions` successfully created and populated in SQLite.")
     else:
         database_records = con.execute("""
             SELECT count(*)
@@ -74,7 +74,7 @@ def run_ingestion(csv_path=CSV_PATH, db_path=DB_PATH, verbose=True):
         # Check if database is updated with the csv file
         if database_records == csv_records:
             if verbose:
-                print(f"ℹ️ Banco de dados já atualizado e íntegro ({database_records} registros).")
+                print(f"ℹ️ Database verified and up to date ({database_records} records).")
         else:
             con.execute(f"""
                 INSERT INTO sqlite_db.transactions 
@@ -91,7 +91,7 @@ def run_ingestion(csv_path=CSV_PATH, db_path=DB_PATH, verbose=True):
                 WHERE transaction_id NOT IN (SELECT transaction_id FROM sqlite_db.transactions);
             """)
             if verbose:
-                print(f"🔄 Banco de dados atualizado: {csv_records - database_records} novos registros inseridos.")
+                print(f"🔄 Database updated: {csv_records - database_records} new records inserted.")
 
     # Creation of index to speed up queries
     indexes = [
