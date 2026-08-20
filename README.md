@@ -199,32 +199,33 @@ The executive dashboard features **native Dark Mode**, custom CSS cards, and **i
 
 ```
 cloudwalk-case/
-├── README.md                      # Comprehensive bilingual documentation
-├── requirements.txt               # Standard pip package dependencies
-├── pyproject.toml                 # Modern Python packaging configuration (uv/pip)
-├── run.py                         # 1-Click launcher script
+├── README.md                                  # Comprehensive bilingual documentation
+├── Lucas Pedro - Data Analyst Case Solution.md # Full case solution & executive report (EN)
+├── Lucas Pedro - Data Analyst Case Solution (PT).md # Full case solution & executive report (PT)
+├── requirements.txt                           # Standard pip package dependencies
+├── pyproject.toml                             # Modern Python packaging configuration (uv/pip)
+├── run.py                                     # 1-Click launcher script
 │
 ├── data/
-│   └── transactions.sqlite        # Persistent indexed SQLite database
+│   └── transactions.sqlite                    # Persistent indexed SQLite database
 │
 ├── security-test/
-│   ├── transactional-sample.csv   # Raw transaction dataset (3,199 rows)
-│   ├── anti-fraud_report.md       # Comprehensive executive anti-fraud report
-│   ├── respostas-payments.md      # Detailed payment ecosystem answers
-│   └── Data_Analyst_I_Case_External.pdf # Original technical case challenge
+│   ├── transactional-sample.csv               # Raw transaction dataset (3,199 rows)
+│   ├── software-engineer-payments.md          # Payment system reference document
+│   └── Data_Analyst_I_Case_External.pdf       # Original technical case challenge
 │
 └── src/
-    ├── ingest_data.py             # Idempotent CSV -> SQLite ingestion + indexing
-    ├── views.py                   # 15+ DuckDB analytical VIEW definitions
-    ├── dashboard.py               # Complete Streamlit Dashboard (6 tabs + I18n)
-    └── extract_insights.py        # Terminal-based heuristic validator & insights extractor
+    ├── ingest_data.py                         # Idempotent CSV -> SQLite ingestion + indexing
+    ├── views.py                               # 15+ DuckDB analytical VIEW definitions
+    ├── dashboard.py                           # Complete Streamlit Dashboard (6 tabs + I18n)
+    └── extract_insights.py                    # Terminal-based heuristic validator & insights extractor
 ```
 
 ---
 
 ## 📚 Theoretical Payments Answers (Summary)
 
-Complete technical essays and answers are available in [`security-test/anti-fraud_report.md`](security-test/anti-fraud_report.md), [`security-test/respostas-payments.md`](security-test/respostas-payments.md), and inside **Tab 6 of the Dashboard**:
+Complete technical essays and answers are available in [`Lucas Pedro - Data Analyst Case Solution.md`](Lucas%20Pedro%20-%20Data%20Analyst%20Case%20Solution.md) (or the Portuguese version [`Lucas Pedro - Data Analyst Case Solution (PT).md`](Lucas%20Pedro%20-%20Data%20Analyst%20Case%20Solution%20(PT).md)) and inside **Tab 6 of the Dashboard**:
 
 * **Question 1 (Payment Industry Flow):** Detailed step-by-step description of real-time dual-message authorization (Cardholder $\leftrightarrow$ Merchant $\leftrightarrow$ Gateway/PayFac $\leftrightarrow$ Acquirer $\leftrightarrow$ Scheme $\leftrightarrow$ Issuer) and financial clearing & settlement, including MDR breakdown (*Interchange Fee*, Scheme Assessment, and Acquirer Margin).
 * **Question 2 (Acquirer vs Sub-acquirer vs Gateway):** Technical and operational comparison highlighting risk underwriting, centralized settlement (PayFac / Master Merchant model), and cryptographic API routing (Gateways).
@@ -253,6 +254,8 @@ python run.py
 
 ### ⚡ Opção B: Utilizando `uv` (Ultra Rápido)
 
+Se você utiliza o gerenciador [`uv`](https://github.com/astral-sh/uv):
+
 ```bash
 # Cria o ambiente virtual e inicia o dashboard diretamente
 uv run python run.py
@@ -269,11 +272,13 @@ uv run streamlit run src/dashboard.py
 streamlit run src/dashboard.py
 ```
 
-> 💡 **Nota de Automação:** Ao iniciar o dashboard ou qualquer script, o sistema verifica automaticamente a integridade do banco SQLite (`data/transactions.sqlite`). Caso não exista ou esteja vazio, a ingestão e a criação dos índices ocorrem automaticamente em menos de **1 segundo**.
+> 💡 **Nota de Automação:** Ao iniciar o dashboard ou qualquer script, o sistema verifica automaticamente a integridade do banco SQLite (`data/transactions.sqlite`). Caso não exista ou esteja vazio, a ingestão e a criação dos índices relacionais ocorrem automaticamente em menos de **1 segundo**.
 
 ---
 
 ### 📊 Opção D: Relatório de Insights via Terminal (CLI)
+
+Para extrair e exibir todas as tabelas analíticas estruturadas e benchmarks de heurísticas diretamente no terminal:
 
 ```bash
 python src/extract_insights.py
@@ -281,56 +286,165 @@ python src/extract_insights.py
 
 ---
 
-## 🎯 Visão Geral do Case e Resultados de Negócio
+## 🎯 Resumo Executivo & Resultados de Negócio
 
-A análise foi conduzida sobre a base transacional de **3.199 operações mobile** totalizando **$ 2.456.233,48** em volume transacionado.
+A análise exploratória foi conduzida sobre a base transacional de **3.199 operações mobile** com volume bruto de **$ 2.456.233,48**.
 
-### 📌 Diagnóstico Macro do Portfólio
+### 📌 Métricas Macro do Portfólio
 
-| Indicador | Volume Legítimo | Volume Fraude (CBK) | Total Geral | % Fraude |
+| Métrica | Volume Legítimo | Volume Fraude (Chargeback) | Total do Portfólio | Taxa de Fraude (%) |
 | :--- | :---: | :---: | :---: | :---: |
-| **Transações** | 2.808 | 391 | 3.199 | **12,22%** |
+| **Quantidade de Transações** | 2.808 | 391 | 3.199 | **12,22%** |
 | **Volume Financeiro ($)** | $ 1.887.886,86 | $ 568.346,62 | $ 2.456.233,48 | **23,14%** |
-| **Ticket Médio** | $ 672,32 | $ 1.453,57 | $ 767,81 | **+116,2% no ticket de fraude** |
+| **Ticket Médio** | $ 672,32 | $ 1.453,57 | $ 767,81 | **+116,2% maior ticket em fraude** |
 
-> ⚠️ **Insight Crítico:** O prejuízo financeiro do chargeback (**23,14% do faturamento**) é quase o dobro da taxa volumétrica (**12,22%**). Fraudes no ecossistema têm como alvo transações de **alto valor**, demandando regras com sensibilidade monetária e velocidade transacional.
+> ⚠️ **Insight Crítico de Negócio:** As perdas financeiras por chargeback (**23,14% da receita total**) representam quase o dobro da taxa volumétrica transacional (**12,22%**). Agentes fraudulentos focam especificamente em transações de **alto valor**, exigindo regras com detecção de anomalia de valor e monitoramento de velocidade.
 
 ---
 
 ## 💡 Padrões Comportamentais de Fraude Identificados
 
-1. **Device Farming & Multi-Card Velocity:** Dispositivos com mais de 4 cartões distintos possuem **89,7% de taxa de chargeback**, indicando emulação e fazendas de teste de cartões clonados.
-2. **Velocity Bursts (Disparos Consecutivos):** Usuários com 3 ou mais transações em janelas inferiores a 10 minutos concentram **71,4% a 92,8% de chargeback**.
-3. **Merchant Hopping:** Usuários que tentam compras em 3 ou mais lojistas distintos em curto intervalo apresentam **88,4% de taxa de chargeback**, caracterizando varredura de limites.
-4. **Anomalia de Valor (Ticket Spike):** Compras que excedem **250% da média histórica** do usuário apresentam salto de taxa de fraude para **68,3%**.
+```
+                   PADRÕES DE FRAUDE IDENTIFICADOS
+┌─────────────────────────┐         ┌─────────────────────────┐
+│     Device Farming      │         │     Velocity Burst      │
+│   > 4 cartões / aparelho│         │   Rajadas < 10 min      │
+│   Taxa CBK: 89,7%       │         │   Taxa CBK: 71,4%       │
+└────────────┬────────────┘         └────────────┬────────────┘
+             │                                   │
+             └─────────────────┬─────────────────┘
+                               │
+                ┌──────────────┴──────────────┐
+                │      Merchant Hopping       │
+                │   >= 3 lojistas em série    │
+                │   Taxa CBK: 88,4%           │
+                └─────────────────────────────┘
+```
+
+1. **Device Farming & Multi-Card Velocity:** Aparelhos vinculados a mais de 4 cartões distintos exibem taxa de chargeback de **89,7%**, indicando emuladores de hardware e fazendas de teste de credenciais.
+2. **Velocity Bursts (Disparos em Rajada):** Usuários com 3 ou mais tentativas em janelas inferiores a 10 minutos concentram probabilidade de chargeback entre **71,4% e 92,8%**.
+3. **Merchant Hopping:** Usuários que transitam consecutivamente por 3 ou mais lojistas apresentam **88,4% de taxa de chargeback**, característico de ataques rápidos de varredura de limites.
+4. **Anomalia de Valor (Ticket Spike):** Transações que excedem **250% da média histórica** do usuário apresentam taxa de fraude de **68,3%**.
 
 ---
 
-## ⚖️ Estratégia de Mitigação: 4 Camadas de Decisão
+## ⚖️ Estratégia de Decisão Antifraude em 4 Camadas (4-Tier Strategy)
 
-| Nível de Risco | Faixa de Probabilidade | Ação do Motor | Impacto na Experiência do Cliente |
+Para **maximizar a prevenção de fraudes enquanto protege a receita legítima dos lojistas e a conversão dos clientes**, as decisões são roteadas através de 4 níveis operacionais:
+
+| Nível de Risco | Probabilidade de Fraude | Ação do Motor | Impacto no Cliente & Lojista |
 | :--- | :---: | :---: | :--- |
-| 🟢 **Green Path** | 0% a 15% | **Aprovação Automática** | Zero atrito; aprovação instantânea em sub-segundos. |
-| 🟡 **Watchlist** | 15% a 40% | **Monitoramento Silencioso** | Compra aprovada com acompanhamento de velocidade. |
-| 🟠 **Step-Up Challenge** | 40% a 75% | **Autenticação Reforçada** | Desafio 3DS 2.0 / Biometria Facial / Push no App. Evita falso positivo. |
-| 🔴 **Hard Decline** | > 75% | **Bloqueio Imediato** | Recusa da transação e congelamento preventivo de credencial. |
+| 🟢 **Green Path** | 0% a 15% | **Aprovação Fluida** | Aprovação instantânea em sub-segundos; zero atrito comercial. |
+| 🟡 **Watchlist** | 15% a 40% | **Monitoramento Silencioso** | Aprovada; marcada para observação de velocidade em background. |
+| 🟠 **Step-Up Challenge** | 40% a 75% | **Autenticação Reforçada** | Desafio 3DS 2.0 / Biometria Facial / Push no App. Elimina falsos positivos. |
+| 🔴 **Hard Decline** | > 75% | **Bloqueio Imediato** | Rejeição direta; cartão e dispositivo bloqueados preventivamente. |
 
 ---
 
-## 📊 Módulos do Dashboard Interativo
+## 📊 Módulos do Dashboard Interativo (Interactive Dashboard Modules)
+
+O dashboard executivo possui **Dark Mode nativo**, cartões customizados em CSS e **suporte bilíngue instantâneo (PT-BR / EN)** via barra lateral:
 
 ```
 [🌐 Seletor de Idioma: 🇧🇷 Português | 🇺🇸 English]
-├── 1. 📊 Overview Executivo & KPIs (Métricas macro, curvas temporais, tickets)
-├── 2. 🔍 Análise Multidimensional de Riscos (Device Farming, Velocity Bursts, Faixas de Valor)
-├── 3. 🛡️ Motor de Heurísticas & ROI (6 Regras com Precisão, Recall e ROI financeiro)
-├── 4. 🎛️ Simulador Interativo de Regras (Ajuste dinâmico de limiares com recálculo em tempo real)
-├── 5. 🔬 Investigação Forense de Transações (Drill-down por transação, usuário e dispositivo)
-└── 6. 📚 Respostas Teóricas & Ecossistema de Pagamentos (Perguntas 1, 2 e 3 do desafio)
+├── 1. 📊 Overview Executivo & KPIs do Portfólio
+│   ├── KPIs Macro (Volume, Quantidade, Ticket Médio, Taxas de Perda)
+│   ├── Curvas diárias e acumuladas de progressão de chargebacks
+│   └── Histogramas comparativos de distribuição de tickets (Legítimo vs Fraude)
+├── 2. 🔍 Análise Multidimensional de Riscos
+│   ├── Matriz de Device Farming (Cartões por Aparelho)
+│   ├── Distribuição de Velocity Bursts e intervalos temporais
+│   └── Análise de sensibilidade por faixas de valor
+├── 3. 🛡️ Motor de Heurísticas & ROI Financeiro
+│   ├── 6 Regras estatísticas com métricas de Precisão, Recall e F1-Score
+│   ├── Matrizes de confusão e métricas de prevenção de fraudes
+│   └── ROI Financeiro Líquido (Perdas Prevenidas vs Custo de Falso Positivo)
+├── 4. 🎛️ Simulador Interativo de Regras
+│   ├── Ajuste em tempo real de limiares (Picos de Valor, Janelas de Tempo, Limites de Cartões)
+│   └── Recálculo dinâmico da receita protegida e taxas de falsos positivos
+├── 5. 🔬 Investigação Forense de Transações & Drill-Down
+│   ├── Análise aprofundada por ID de Transação, ID de Usuário, Cartão e ID de Dispositivo
+│   └── Linha do tempo cronológica de auditoria de risco para analistas de fraude
+└── 6. 📚 Respostas Técnicas & Ecossistema da Indústria de Pagamentos
+    ├── Pergunta 1: Fluxo de Autorização, Liquidação (Clearing & Settlement), Composição do MDR
+    ├── Pergunta 2: Adquirente vs Subadquirente (PayFac) vs Gateway de Pagamentos
+    └── Pergunta 3: Chargeback vs Cancelamento & Risco Adquirente Regulatório
 ```
+
+---
+
+## 🏗️ Arquitetura Técnica & Stack Tecnológica (Technical Architecture & Stack)
+
+```
+┌────────────────────────────────┐
+│ security-test/                 │
+│ transactional-sample.csv       │
+└───────────────┬────────────────┘
+                │
+                ▼ (src/ingest_data.py)
+┌────────────────────────────────┐
+│ data/transactions.sqlite       │  <-- Armazenamento SQLite persistente indexado
+│ (Indexado: tx, user, dev, etc.)│
+└───────────────┬────────────────┘
+                │
+                ▼ (src/views.py)
+┌────────────────────────────────┐
+│ DuckDB In-Memory OLAP Engine   │  <-- 15+ VIEWs analíticas (sub-milissegundo)
+└───────────────┬────────────────┘
+                │
+        ┌───────┴────────────────┐
+        ▼                        ▼
+┌──────────────────┐   ┌───────────────────────────┐
+│ Streamlit UI     │   │ Terminal CLI Engine       │
+│ (src/dashboard.py│   │ (src/extract_insights.py) │
+└──────────────────┘   └───────────────────────────┘
+```
+
+* **DuckDB (In-Memory OLAP Engine):** Motor analítico SQL colunar de altíssima velocidade em memória, executando agregações em mais de 15 views personalizadas.
+* **SQLite 3:** Camada de persistência relacional com índices em árvore B (*B-Tree*) em `transaction_id`, `user_id`, `merchant_id`, `card_number`, `device_id` e `transaction_date`.
+* **Streamlit + Plotly:** Interface web reativa interativa com design CSS refinado e suporte a múltiplos idiomas.
+
+---
+
+## 📁 Estrutura de Arquivos do Repositório
+
+```
+cloudwalk-case/
+├── README.md                                  # Documentação bilíngue completa
+├── Lucas Pedro - Data Analyst Case Solution.md # Resolução completa do case e relatório executivo (EN)
+├── Lucas Pedro - Data Analyst Case Solution (PT).md # Resolução completa do case e relatório executivo (PT)
+├── requirements.txt                           # Dependências de pacotes padrão pip
+├── pyproject.toml                             # Configuração moderna de empacotamento Python (uv/pip)
+├── run.py                                     # Script de inicialização automática 1-clique
+│
+├── data/
+│   └── transactions.sqlite                    # Banco de dados SQLite persistente indexado
+│
+├── security-test/
+│   ├── transactional-sample.csv               # Base de dados transacional bruta (3.199 linhas)
+│   ├── software-engineer-payments.md          # Documento de referência do sistema de pagamentos
+│   └── Data_Analyst_I_Case_External.pdf       # Documento original com o desafio técnico
+│
+└── src/
+    ├── ingest_data.py                         # Ingestão idempotente CSV -> SQLite + Indexação
+    ├── views.py                               # Definição de 15+ VIEWs analíticas em DuckDB
+    ├── dashboard.py                           # Dashboard Streamlit completo (6 abas + I18n)
+    └── extract_insights.py                    # Validador de heurísticas e extrator de insights em CLI
+```
+
+---
+
+## 📚 Resumo das Respostas Teóricas de Pagamentos
+
+As análises técnicas completas e relatórios executivos estão documentados em [`Lucas Pedro - Data Analyst Case Solution (PT).md`](Lucas%20Pedro%20-%20Data%20Analyst%20Case%20Solution%20(PT).md) (ou versão em inglês [`Lucas Pedro - Data Analyst Case Solution.md`](Lucas%20Pedro%20-%20Data%20Analyst%20Case%20Solution.md)) e na **Aba 6 do Dashboard**:
+
+* **Pergunta 1 (Fluxo da Indústria de Pagamentos):** Descrição detalhada da autorização em tempo real (*dual-message*) entre Portador $\leftrightarrow$ Lojista $\leftrightarrow$ Gateway/PayFac $\leftrightarrow$ Adquirente $\leftrightarrow$ Bandeira $\leftrightarrow$ Emissor e do processo de liquidação (*Clearing & Settlement*), incluindo o detalhamento e repartição do MDR (*Taxa de Intercâmbio*, Taxa da Bandeira e Margem de Adquirência).
+* **Pergunta 2 (Adquirente vs Subadquirente vs Gateway):** Comparação técnica e operacional enfatizando subscrição de risco, liquidação centralizada (*modelo PayFac / Master Merchant*) e roteamento de APIs criptografadas (*Gateways*).
+* **Pergunta 3 (Chargeback vs Cancelamento & Risco da Adquirente):** Distinção formal entre cancelamento comercial voluntário e disputa por fraude (*Chargeback*), além dos riscos regulatórios (Programas Visa VAMP / Mastercard ECP) e risco de crédito por insolvência de lojistas.
 
 ---
 
 <div align="center">
 Desenvolvido para o <b>Processo Seletivo CloudWalk — Data Analyst I</b>.
 </div>
+
